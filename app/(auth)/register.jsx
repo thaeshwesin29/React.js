@@ -1,42 +1,73 @@
-import { StyleSheet,Text } from 'react-native'
+import { Keyboard, StyleSheet, Text, TouchableWithoutFeedback } from 'react-native'
 import { Link } from 'expo-router'
-import React from 'react'
+import { useState } from 'react'
+import { useUser } from '../../hooks/useUser'
 
-// themed components
-import ThemeView from "../../components/ThemedView";
-import Spacer from "../../components/Spacer";
-import ThemedText from "../../components/ThemedText";
-import ThemedButton from "../../components/ThemedButton";
+import ThemedView from '../../components/ThemedView'
+import ThemedText from '../../components/ThemedText'
+import Spacer from '../../components/Spacer'
+import ThemedButton from '../../components/ThemedButton'
+import ThemedTextInput from "../../components/ThemedTextInput"
+import { Colors } from '../../constants/Colors'
 
 const Register = () => {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState(null)
 
-  const handleRegister = () => {
-    console.log("Register pressed")
+  const { user, register } = useUser()
+
+  const handleSubmit = async () => {
+    setError(null)
+
+    try {
+      await register(email, password)
+      console.log('current user is: ', user)
+    } catch (error) {
+      setError(error.message)
+    }
   }
 
   return (
-    <ThemeView style={styles.container}>
-      
-      <Spacer />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ThemedView style={styles.container}>
 
-      <ThemedText title style={styles.title}>
-        Register For an Account
-      </ThemedText>
-
-      <ThemedButton
-        title="Register"
-        onPress={handleRegister}
-      />
-
-      <Spacer height={100} />
-
-      <Link href="/login">
-        <ThemedText style={{ textAlign: 'center' }}>
-          Login instead
+        <Spacer />
+        <ThemedText title={true} style={styles.title}>
+          Register an Account
         </ThemedText>
-      </Link>
 
-    </ThemeView>
+        <Spacer />
+        <ThemedTextInput
+          style={{ marginBottom: 20, width: "80%" }}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+
+        <ThemedTextInput
+          style={{ marginBottom: 20, width: "80%" }}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <ThemedButton onPress={handleSubmit} title="Register" />
+
+        <Spacer />
+        {error && <Text style={styles.error}>{error}</Text>}
+
+        <Spacer height={100} />
+        <Link href="/login" replace>
+          <ThemedText style={{ textAlign: "center" }}>
+            Login instead
+          </ThemedText>
+        </Link>
+
+      </ThemedView>
+    </TouchableWithoutFeedback>
   )
 }
 
@@ -46,11 +77,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   title: {
-    fontWeight: "bold",
+    textAlign: "center",
     fontSize: 18,
     marginBottom: 30
   },
+  error: {
+    color: Colors.warning,
+    padding: 10,
+    backgroundColor: '#f5c1c8',
+    borderColor: Colors.warning,
+    borderWidth: 1,
+    borderRadius: 6,
+    margin: 10,
+  }
 })

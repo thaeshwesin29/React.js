@@ -1,19 +1,86 @@
-import { StyleSheet } from 'react-native'
+import { StyleSheet, Text, TouchableWithoutFeedback, Keyboard } from 'react-native'
+import { useBooks } from "../../hooks/useBooks"
+import { useRouter } from 'expo-router'
+import { useState } from 'react'
 
-import Spacer from "../../components/Spacer"
-import ThemedText from "../../components/ThemedText"
+// themed components
 import ThemedView from "../../components/ThemedView"
+import ThemedText from "../../components/ThemedText"
+import ThemedTextInput from "../../components/ThemedTextInput"
+import ThemedButton from '../../components/ThemedButton'
+import Spacer from '../../components/Spacer'
 
 const Create = () => {
+  const [title, setTitle] = useState("")
+  const [author, setAuthor] = useState("")
+  const [description, setDescription] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const { createBook } = useBooks()
+  const router = useRouter()
+
+  async function handleSubmit() {
+    if (!title.trim() || !author.trim() || !description.trim()) return
+
+    setError(null)
+    setLoading(true)
+    
+    try {
+      await createBook({ title, author, description })
+
+      setTitle("")
+      setAuthor("")
+      setDescription("")
+
+      router.replace("/(dashboard)/books")
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setLoading(false) 
+    }
+  }
+
   return (
-    <ThemedView style={styles.container}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
+      <ThemedView style={styles.container}>
 
-      <ThemedText title={true} style={styles.heading}>
-        Add a New Book
-      </ThemedText>
-      <Spacer />
+        <ThemedText title={true} style={styles.heading}>
+          Add a New Book
+        </ThemedText>
+        <Spacer />
 
-    </ThemedView>
+        <ThemedTextInput
+          style={styles.input}
+          placeholder="Book Title"
+          value={title}
+          onChangeText={setTitle}
+        />
+        <Spacer />
+
+        <ThemedTextInput
+          style={styles.input}
+          placeholder="Author"
+          value={author}
+          onChangeText={setAuthor}
+        />
+        <Spacer />
+
+        <ThemedTextInput
+          style={styles.multiline}
+          placeholder="Book Description"
+          value={description}
+          onChangeText={setDescription}
+          multiline={true}
+        />
+        <Spacer />
+
+        <ThemedButton onPress={handleSubmit} disabled={loading} title={loading ? "Saving..." : "Create Book"} />
+
+        {error && <Text style={styles.error}>{error}</Text>}
+
+      </ThemedView>
+    </TouchableWithoutFeedback>
   )
 }
 
@@ -29,5 +96,23 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 18,
     textAlign: "center",
+  },
+  input: {
+    padding: 20,
+    borderRadius: 6,
+    alignSelf: 'stretch',
+    marginHorizontal: 40,
+  },
+  multiline: {
+    padding: 20,
+    borderRadius: 6,
+    minHeight: 100,
+    alignSelf: 'stretch',
+    marginHorizontal: 40,
+  },
+  error: {
+    color: '#cc475a',
+    padding: 10,
+    margin: 10,
   },
 })
